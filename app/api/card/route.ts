@@ -12,6 +12,7 @@ type GroupedCertRow = {
   status: string;
   _count: { _all: number };
 };
+type CardEntity = Awaited<ReturnType<typeof prisma.cards.findFirstOrThrow>>;
 
 const emptyStats = (): CardStats => ({
   active: 0,
@@ -48,7 +49,7 @@ const buildStatsMap = async (cardIds: bigint[]) => {
 };
 
 const normalizeCard = (
-  card: Awaited<ReturnType<typeof prisma.cards.findFirstOrThrow>>,
+  card: CardEntity,
   stats: CardStats,
 ) => ({
   id: Number(card.id),
@@ -64,7 +65,7 @@ export const GET = async () => {
 
   try {
     const userId = BigInt(user.id);
-    let cards = await prisma.cards.findMany({
+    let cards: CardEntity[] = await prisma.cards.findMany({
       where: { user_id: userId },
     });
 
