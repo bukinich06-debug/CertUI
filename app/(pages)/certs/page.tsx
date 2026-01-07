@@ -1,8 +1,12 @@
 import { CertsPage } from "@/components/pages";
-import { FC } from "react";
+import { FC, Suspense } from "react";
 
 const Certs: FC = () => {
-  return <CertsPage />;
+  return (
+    <Suspense fallback={null}>
+      <CertsPage />
+    </Suspense>
+  );
 };
 
 export default Certs;
