@@ -7,6 +7,11 @@ const KNOWN_STATUSES = ["active", "used", "expired"] as const;
 type KnownStatus = (typeof KNOWN_STATUSES)[number];
 
 type CardStats = Record<KnownStatus, number>;
+type GroupedCertRow = {
+  card_id: bigint;
+  status: string;
+  _count: { _all: number };
+};
 
 const emptyStats = (): CardStats => ({
   active: 0,
@@ -28,7 +33,7 @@ const buildStatsMap = async (cardIds: bigint[]) => {
 
   const result = new Map<string, CardStats>();
 
-  grouped.forEach((row) => {
+  grouped.forEach((row: GroupedCertRow) => {
     const key = row.card_id.toString();
     const stats = result.get(key) ?? emptyStats();
 
