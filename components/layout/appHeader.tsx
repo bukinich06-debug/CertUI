@@ -47,7 +47,9 @@ export const AppHeader = ({
           </div>
 
           <Button variant={isAuthenticated ? "outline" : "default"} asChild>
-            <Link href={actionHref}>{actionLabel}</Link>
+            <Link href={actionHref} prefetch={false}>
+              {actionLabel}
+            </Link>
           </Button>
         </div>
       </div>
