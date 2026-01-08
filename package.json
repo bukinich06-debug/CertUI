@@ -9,8 +9,8 @@
     "start": "next start",
     "lint": "next lint",
     "generate": "prisma generate",
-    "prpush": "prisma db push",
-    "prpull": "prisma db pull"
+    "dbpush": "prisma db push",
+    "dbpull": "prisma db pull"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
