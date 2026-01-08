@@ -8,6 +8,7 @@ export type GiftCertificate = {
   issuedAt: string;
   expiresAt: string | null;
   status: GiftStatus;
+  note?: string | null;
   qrCodeDataUrl?: string;
 };
 
@@ -16,6 +17,7 @@ export type CreateGiftCertificate = {
   recipient: string;
   amount: number;
   expiresAt: string | null;
+  note?: string | null;
 };
 
 export type DraftCertificate = {
@@ -24,4 +26,5 @@ export type DraftCertificate = {
   issuedAt: GiftCertificate["issuedAt"];
   hasExpiry: boolean;
   expiresAt: GiftCertificate["expiresAt"];
+  note: string;
 };

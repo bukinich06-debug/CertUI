@@ -9,6 +9,7 @@ const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.findFirstOrT
   issuedAt: cert.issued_at.toISOString().slice(0, 10),
   expiresAt: cert.expires_at ? cert.expires_at.toISOString().slice(0, 10) : null,
   status: cert.status,
+  note: cert.note ?? null,
 });
 
 export const GET = async (request: Request) => {

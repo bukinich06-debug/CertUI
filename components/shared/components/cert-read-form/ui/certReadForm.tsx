@@ -34,6 +34,9 @@ export const CertReadForm = ({ cert, currency, className, headerRight, footer }:
         <Field label="Остаток" value={currency.format(cert.balance)} />
         <Field label="Выдан" value={formatCertDate(cert.issuedAt)} />
         <Field label="Истекает" value={formatCertDate(cert.expiresAt)} />
+        <div className="md:col-span-2">
+          <Field label="Дополнительные сведения" value={cert.note?.trim() || "—"} multiline />
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground">

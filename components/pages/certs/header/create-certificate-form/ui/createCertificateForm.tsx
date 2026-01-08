@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import Textarea from "@/components/ui/textarea";
 import { Label } from "@radix-ui/react-label";
 import { FilePlus2 } from "lucide-react";
 import { Dispatch, FormEvent, SetStateAction, useRef, useState } from "react";
@@ -27,6 +28,7 @@ const createInitialDraft = (): DraftCertificate => ({
   issuedAt: todayIso(),
   hasExpiry: true,
   expiresAt: "",
+  note: "",
 });
 
 interface IProps {
@@ -66,6 +68,7 @@ export const CreateCertificateForm = ({
       recipient: draftCert.recipient,
       amount: Number(draftCert.amount) || 0,
       expiresAt: draftCert.hasExpiry ? draftCert.expiresAt : null,
+      note: draftCert.note.trim() ? draftCert.note.trim() : null,
     };
 
     try {
@@ -178,6 +181,18 @@ export const CreateCertificateForm = ({
                 required={draftCert.hasExpiry}
                 min={tomorrowIso()}
                 className={!draftCert.hasExpiry ? "bg-muted/60 text-muted-foreground" : ""}
+              />
+            </div>
+
+            <div className="space-y-1 md:col-span-2">
+              <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                Дополнительная информация
+              </Label>
+              <Textarea
+                value={draftCert.note}
+                onChange={(e) => onDraftChange("note", e.target.value)}
+                placeholder="Комментарии, условия использования или пожелания"
+                className="flex min-h-[120px] w-full bg-transparent text-base placeholder:text-muted-foreground md:text-sm"
               />
             </div>
 

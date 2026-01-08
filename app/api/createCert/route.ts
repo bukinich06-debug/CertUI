@@ -12,6 +12,7 @@ const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.create>>) =>
   issuedAt: cert.issued_at.toISOString().slice(0, 10),
   expiresAt: cert.expires_at ? cert.expires_at.toISOString().slice(0, 10) : null,
   status: cert.status as "active" | "used" | "expired",
+  note: cert.note,
 });
 
 export const POST = async (req: Request) => {
@@ -67,6 +68,14 @@ export const POST = async (req: Request) => {
       expiresAt = parsedExpiresAt;
     }
 
+    let note: string | null = null;
+    if (body.note !== undefined && body.note !== null) {
+      if (typeof body.note !== "string") {
+        return NextResponse.json({ error: "note должно быть строкой" }, { status: 400 });
+      }
+      note = body.note.trim() || null;
+    }
+
     const cert = await prisma.certs.create({
       data: {
         card_id: cardId,
@@ -76,6 +85,7 @@ export const POST = async (req: Request) => {
         issued_at: issuedAt,
         expires_at: expiresAt ?? null,
         status: "active",
+        note,
       }
     });
 
