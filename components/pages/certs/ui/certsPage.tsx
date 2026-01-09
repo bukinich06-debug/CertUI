@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { makeRequest } from "@/lib/makeRequest";
+import { Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -46,18 +47,35 @@ export const CertsPage: FC = () => {
   const [scanErrorMessage, setScanErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [isLoadingCertByCode, setIsLoadingCertByCode] = useState(false);
+  const fetchedCodeRef = useRef<string | null>(null);
+
+  const showScanError = useCallback((message: string) => {
+    setScanErrorMessage(message);
+  }, []);
 
   useEffect(() => {
     const code = searchParams.get("code");
-    if (!code) return;
+    if (!code || fetchedCodeRef.current === code) return;
 
     const fetch = async () => {
-      const cert = await fetchCertByCode(code);
-      setRedeemCert(cert);
+      fetchedCodeRef.current = code;
+      setIsLoadingCertByCode(true);
+
+      try {
+        const cert = await fetchCertByCode(code);
+        setRedeemCert(cert);
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Не удалось загрузить сертификат";
+        setScanErrorMessage(errorMessage);
+      } finally {
+        setIsLoadingCertByCode(false);
+      }
     };
 
     fetch();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const fetchCertificates = useCallback(async () => {
     setIsLoading(true);
@@ -97,10 +115,6 @@ export const CertsPage: FC = () => {
     if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
     successTimeoutRef.current = setTimeout(() => setSuccessMessage(null), 3000);
   }, []);
-
-  const showScanError = (message: string) => {
-    setScanErrorMessage(message);
-  };
 
   return (
     <section className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
@@ -179,6 +193,19 @@ export const CertsPage: FC = () => {
         onSuccessMessage={showSuccessMessage}
         onRedeemSuccess={fetchCertificates}
       />
+
+      {isLoadingCertByCode &&
+        createPortal(
+          <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <p className="text-sm font-medium text-muted-foreground">
+                Загрузка информации о сертификате...
+              </p>
+            </div>
+          </div>,
+          document.body,
+        )}
     </section>
   );
 };
