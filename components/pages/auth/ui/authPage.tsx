@@ -2,10 +2,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { LoginForm } from "../login";
-import { RegisterForm } from "../register";
 
 export const AuthPage = () => {
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -46,19 +45,20 @@ export const AuthPage = () => {
                 <LogIn className="h-4 w-4" />
                 Вход
               </TabsTrigger>
-              <TabsTrigger value="register" className="flex items-center gap-2">
+              {/* TODO: временно убрал таб регистрации */}
+              {/* <TabsTrigger value="register" className="flex items-center gap-2">
                 <UserPlus className="h-4 w-4" />
                 Регистрация
-              </TabsTrigger>
+              </TabsTrigger> */}
             </TabsList>
 
             <TabsContent value="login">
               <LoginForm googleLoading={googleLoading} handleGoogleStart={handleGoogleStart} />
             </TabsContent>
 
-            <TabsContent value="register">
+            {/* <TabsContent value="register">
               <RegisterForm googleLoading={googleLoading} handleGoogleStart={handleGoogleStart} />
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </CardContent>
       </Card>
