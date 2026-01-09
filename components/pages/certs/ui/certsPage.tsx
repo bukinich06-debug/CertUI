@@ -33,6 +33,7 @@ export const CertsPage: FC = () => {
     const parsed = raw !== null ? Number(raw) : Number.NaN;
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
   }, [searchParams]);
+  const codeFromQuery = useMemo(() => searchParams.get("code"), [searchParams]);
 
   const [certificates, setCertificates] = useState<GiftCertificate[]>([]);
   const [selectedCert, setSelectedCert] = useState<GiftCertificate | null>(null);
@@ -45,6 +46,7 @@ export const CertsPage: FC = () => {
   const [scanErrorMessage, setScanErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [handledCodeParam, setHandledCodeParam] = useState<string | null>(null);
 
   const fetchCertificates = useCallback(async () => {
     setIsLoading(true);
@@ -79,15 +81,56 @@ export const CertsPage: FC = () => {
     };
   }, [certsId, fetchCertificates]);
 
-  const showSuccessMessage = (message: string) => {
+  const showSuccessMessage = useCallback((message: string) => {
     setSuccessMessage(message);
     if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
     successTimeoutRef.current = setTimeout(() => setSuccessMessage(null), 3000);
-  };
+  }, []);
 
   const showScanError = (message: string) => {
     setScanErrorMessage(message);
   };
+
+  useEffect(() => {
+    const code = codeFromQuery?.trim();
+    if (!code || handledCodeParam === code) return;
+
+    let cancelled = false;
+    setHandledCodeParam(code);
+    setScanErrorMessage(null);
+
+    const fetchByCode = async () => {
+      try {
+        const res = await makeRequest(`/api/certByCode?code=${encodeURIComponent(code)}`, {
+          redirectOnUnauthorized: false,
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          const message = body?.error ?? "Не удалось получить сертификат по коду";
+          throw new Error(message);
+        }
+
+        const cert = (await res.json()) as GiftCertificate;
+        if (!cancelled) {
+          setRedeemCert(cert);
+          showSuccessMessage("Сертификат найден по коду");
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message =
+            error instanceof Error ? error.message : "Не удалось получить сертификат по коду";
+          setScanErrorMessage(message);
+        }
+      }
+    };
+
+    void fetchByCode();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [codeFromQuery, handledCodeParam, showSuccessMessage]);
 
   return (
     <section className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
