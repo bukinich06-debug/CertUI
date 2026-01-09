@@ -17,6 +17,7 @@ import { createPortal } from "react-dom";
 import { CertsBreadcrumb } from "../breadcrumb";
 import { FormModal } from "../form";
 import { CertsHeader } from "../header";
+import { fetchCertByCode } from "../helpers/fetchCertByCode";
 import { TableCerts } from "../table";
 import { GiftCertificate } from "../types";
 
@@ -28,12 +29,11 @@ const currency = new Intl.NumberFormat("ru-RU", {
 
 export const CertsPage: FC = () => {
   const searchParams = useSearchParams();
-  const certsId = useMemo(() => {
-    const raw = searchParams.get("cardId") ?? searchParams.get("id");
-    const parsed = raw !== null ? Number(raw) : Number.NaN;
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
+
+  const cardIdParams = useMemo(() => {
+    const cardId = searchParams.get("cardId");
+    return Number(cardId);
   }, [searchParams]);
-  const codeFromQuery = useMemo(() => searchParams.get("code"), [searchParams]);
 
   const [certificates, setCertificates] = useState<GiftCertificate[]>([]);
   const [selectedCert, setSelectedCert] = useState<GiftCertificate | null>(null);
@@ -46,14 +46,25 @@ export const CertsPage: FC = () => {
   const [scanErrorMessage, setScanErrorMessage] = useState<string | null>(null);
   const isMountedRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
-  const [handledCodeParam, setHandledCodeParam] = useState<string | null>(null);
+
+  useEffect(() => {
+    const code = searchParams.get("code");
+    if (!code) return;
+
+    const fetch = async () => {
+      const cert = await fetchCertByCode(code);
+      setRedeemCert(cert);
+    };
+
+    fetch();
+  }, []);
 
   const fetchCertificates = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const res = await makeRequest(`/api/certs?id=${encodeURIComponent(certsId)}`);
+      const res = await makeRequest(`/api/certs?id=${encodeURIComponent(cardIdParams)}`);
 
       if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
 
@@ -67,7 +78,7 @@ export const CertsPage: FC = () => {
     } finally {
       if (isMountedRef.current) setIsLoading(false);
     }
-  }, [certsId]);
+  }, [cardIdParams]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -79,7 +90,7 @@ export const CertsPage: FC = () => {
       setIsMounted(false);
       if (successTimeoutRef.current) clearTimeout(successTimeoutRef.current);
     };
-  }, [certsId, fetchCertificates]);
+  }, [cardIdParams, fetchCertificates]);
 
   const showSuccessMessage = useCallback((message: string) => {
     setSuccessMessage(message);
@@ -90,47 +101,6 @@ export const CertsPage: FC = () => {
   const showScanError = (message: string) => {
     setScanErrorMessage(message);
   };
-
-  useEffect(() => {
-    const code = codeFromQuery?.trim();
-    if (!code || handledCodeParam === code) return;
-
-    let cancelled = false;
-    setHandledCodeParam(code);
-    setScanErrorMessage(null);
-
-    const fetchByCode = async () => {
-      try {
-        const res = await makeRequest(`/api/certByCode?code=${encodeURIComponent(code)}`, {
-          redirectOnUnauthorized: false,
-        });
-
-        if (!res.ok) {
-          const body = await res.json().catch(() => null);
-          const message = body?.error ?? "Не удалось получить сертификат по коду";
-          throw new Error(message);
-        }
-
-        const cert = (await res.json()) as GiftCertificate;
-        if (!cancelled) {
-          setRedeemCert(cert);
-          showSuccessMessage("Сертификат найден по коду");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          const message =
-            error instanceof Error ? error.message : "Не удалось получить сертификат по коду";
-          setScanErrorMessage(message);
-        }
-      }
-    };
-
-    void fetchByCode();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [codeFromQuery, handledCodeParam, showSuccessMessage]);
 
   return (
     <section className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
@@ -165,7 +135,7 @@ export const CertsPage: FC = () => {
       </Dialog>
 
       <CertsHeader
-        cardId={certsId}
+        cardId={cardIdParams}
         isCreateOpen={isCreateOpen}
         onOpen={() => setIsCreateOpen(true)}
         onClose={() => setIsCreateOpen(false)}

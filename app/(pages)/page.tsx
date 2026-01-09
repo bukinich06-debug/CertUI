@@ -4,11 +4,19 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
 type IProps = {
-  searchParams?: { code?: string };
+  searchParams?: { code?: string } | Promise<{ code?: string }>;
+};
+
+const resolveSearchParams = async (searchParams?: IProps["searchParams"]) => {
+  if (searchParams && typeof (searchParams as Promise<unknown>).then === "function") {
+    return (await searchParams) ?? {};
+  }
+  return searchParams ?? {};
 };
 
 const Home = async ({ searchParams }: IProps) => {
-  const codeRaw = searchParams?.code;
+  const resolvedSearchParams = await resolveSearchParams(searchParams);
+  const codeRaw = resolvedSearchParams.code;
   const code = typeof codeRaw === "string" ? codeRaw.trim() : "";
 
   const sessionUser = await getSessionUser();

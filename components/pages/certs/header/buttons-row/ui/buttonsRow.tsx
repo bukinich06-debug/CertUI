@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BrowserQRCodeReader } from "@zxing/browser";
 import { FilePlus2, Loader2, SearchCheck } from "lucide-react";
 import { ChangeEvent, useRef, useState } from "react";
+import { fetchCertByCode } from "../../../helpers/fetchCertByCode";
 
 interface IProps {
   onOpen: () => void;
@@ -27,16 +28,6 @@ const extractCode = (raw: string): string | null => {
 
   const uuidMatch = raw.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
   return uuidMatch?.[0] ?? null;
-};
-
-const fetchCertByCode = async (code: string) => {
-  const res = await fetch(`/api/certByCode?code=${encodeURIComponent(code)}`);
-  if (!res.ok) {
-    const body = await res.json().catch(() => null);
-    const message = body?.error ?? `Запрос не выполнен со статусом ${res.status}`;
-    throw new Error(message);
-  }
-  return (await res.json()) as GiftCertificate;
 };
 
 export const ButtonsRow = ({ onOpen, onCertFound, onScanSuccess, onScanError }: IProps) => {
