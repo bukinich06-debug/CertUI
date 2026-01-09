@@ -56,7 +56,7 @@ export const CertEditForm = ({
           </DialogHeader>
 
           <div className="space-y-6">
-            <CertReadForm cert={cert} currency={currency} />
+            <CertReadForm cert={cert} currency={currency} hideReadOnlyLabels={true} />
 
             <div className="space-y-3 rounded-lg border border-border bg-muted/50 p-4">
               <p className="text-sm font-medium text-foreground">Действия</p>

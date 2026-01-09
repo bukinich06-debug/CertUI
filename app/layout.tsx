@@ -32,7 +32,7 @@ const RootLayout = async ({ children }: Readonly<IProps>) => {
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <div className="min-h-screen bg-background text-foreground">
           <AppHeader
-            isAuthenticated={Boolean(sessionUser)}
+            hasSession={Boolean(sessionUser)}
             userName={sessionUser?.name ?? sessionUser?.email ?? undefined}
           />
           <main>{children}</main>

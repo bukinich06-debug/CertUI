@@ -1,20 +1,25 @@
-import Link from "next/link";
+"use client";
 
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface IProps {
-  isAuthenticated?: boolean;
+  hasSession?: boolean;
   userName?: string;
   loginHref?: string;
   logoutHref?: string;
 }
 
 export const AppHeader = ({
-  isAuthenticated = false,
+  hasSession = false,
   userName,
   loginHref = "/auth",
   logoutHref = "/api/auth/logout",
 }: IProps) => {
+  const pathname = usePathname();
+  const isAuthPage = pathname === "/auth";
+  const isAuthenticated = isAuthPage ? false : hasSession;
   const actionLabel = isAuthenticated ? "Выйти" : "Войти";
   const actionHref = isAuthenticated ? logoutHref : loginHref;
 

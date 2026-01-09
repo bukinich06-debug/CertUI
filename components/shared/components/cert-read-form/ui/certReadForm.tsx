@@ -13,16 +13,26 @@ interface IProps {
   className?: string;
   headerRight?: ReactNode;
   footer?: ReactNode;
+  hideReadOnlyLabels?: boolean;
 }
 
-export const CertReadForm = ({ cert, currency, className, headerRight, footer }: IProps) => {
+export const CertReadForm = ({
+  cert,
+  currency,
+  className,
+  headerRight,
+  footer,
+  hideReadOnlyLabels = false,
+}: IProps) => {
   return (
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-wide text-primary/70">Детали сертификата</p>
           <h2 className="text-2xl font-semibold leading-tight text-foreground">{cert.recipient}</h2>
-          <p className="text-sm text-muted-foreground">Данные только для чтения</p>
+          {!hideReadOnlyLabels && (
+            <p className="text-sm text-muted-foreground">Данные только для чтения</p>
+          )}
         </div>
         {headerRight}
       </div>
@@ -39,9 +49,11 @@ export const CertReadForm = ({ cert, currency, className, headerRight, footer }:
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Чтобы появились кнопки для погашения, отсканируйте QR-код этого сертификата.
-      </p>
+      {!hideReadOnlyLabels && (
+        <p className="text-sm text-muted-foreground">
+          Чтобы появились кнопки для погашения, отсканируйте QR-код этого сертификата.
+        </p>
+      )}
 
       {footer}
     </div>
