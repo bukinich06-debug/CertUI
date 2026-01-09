@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { makeRequest } from "@/lib/makeRequest";
 
 interface Iprops {
   showConfirm: boolean;
@@ -45,7 +46,7 @@ export const ConfirmRepaymant = ({
     setError?.(null);
 
     try {
-      const res = await fetch("/api/redeemCert", {
+      const res = await makeRequest("/api/redeemCert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code: cert.code }),

@@ -15,6 +15,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { makeRequest } from "@/lib/makeRequest";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { CardDto } from "../../types";
@@ -50,7 +51,7 @@ export const EditCardModal = ({ card, onClose, onSave }: IProps) => {
     setSubmitError(null);
 
     try {
-      const res = await fetch("/api/card", {
+      const res = await makeRequest("/api/card", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: card.id, name: nextName }),
@@ -58,8 +59,6 @@ export const EditCardModal = ({ card, onClose, onSave }: IProps) => {
 
       const payload = await res.json().catch(() => null);
       if (!res.ok) throw new Error(payload?.error ?? `Request failed: ${res.status}`);
-
-      console.log("!!!!", payload.name);
 
       onSave({
         ...card,

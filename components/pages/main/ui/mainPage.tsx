@@ -1,5 +1,6 @@
 "use client";
 
+import { makeRequest } from "@/lib/makeRequest";
 import { useRouter } from "next/navigation";
 import { FC, useEffect, useState } from "react";
 import { Cards } from "../cards";
@@ -40,7 +41,7 @@ export const MainPage: FC = () => {
       setError(null);
 
       try {
-        const res = await fetch("/api/card", { cache: "no-store" });
+        const res = await makeRequest("/api/card");
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
 
         const data: CardDto[] = await res.json();

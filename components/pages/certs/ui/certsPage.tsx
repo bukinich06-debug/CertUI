@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { makeRequest } from "@/lib/makeRequest";
 import { useSearchParams } from "next/navigation";
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -50,7 +51,7 @@ export const CertsPage: FC = () => {
     setError(null);
 
     try {
-      const res = await fetch(`/api/certs?id=${encodeURIComponent(certsId)}`);
+      const res = await makeRequest(`/api/certs?id=${encodeURIComponent(certsId)}`);
 
       if (!res.ok) throw new Error(`Request failed with status ${res.status}`);
 

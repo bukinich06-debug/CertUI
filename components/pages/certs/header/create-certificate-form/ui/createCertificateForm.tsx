@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import Textarea from "@/components/ui/textarea";
+import { makeRequest } from "@/lib/makeRequest";
 import { Label } from "@radix-ui/react-label";
 import { FilePlus2 } from "lucide-react";
 import { Dispatch, FormEvent, SetStateAction, useRef, useState } from "react";
@@ -72,7 +73,7 @@ export const CreateCertificateForm = ({
     };
 
     try {
-      const res = await fetch("/api/createCert", {
+      const res = await makeRequest("/api/createCert", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(normalized),
