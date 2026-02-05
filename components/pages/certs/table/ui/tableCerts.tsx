@@ -58,12 +58,16 @@ export const TableCerts = ({
     }
 
     return certificatesMock.map((cert) => {
-      // Fallback protects UI from unknown/missing status values
-      const status = statusConfig[cert.status] ?? {
+      const now = new Date();
+      const isOverdue = cert.expiresAt != null && now > new Date(cert.expiresAt);
+
+      const baseStatus = statusConfig[cert.status] ?? {
         label: "Неизвестно",
         className: "bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-200",
         dotClass: "bg-slate-400",
       };
+
+      const status = isOverdue ? statusConfig.expired : baseStatus;
 
       return (
         <TableRow

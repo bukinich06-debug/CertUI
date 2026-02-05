@@ -24,6 +24,9 @@ export const CertReadForm = ({
   footer,
   hideReadOnlyLabels = false,
 }: IProps) => {
+  const isOverdue = cert.expiresAt != null && new Date() > new Date(cert.expiresAt);
+  const displayStatus = isOverdue ? "expired" : cert.status;
+
   return (
     <div className={cn("space-y-4", className)}>
       <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
@@ -38,7 +41,7 @@ export const CertReadForm = ({
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <StatusBadge status={cert.status} />
+        <StatusBadge status={displayStatus} />
         <Field label="Получатель" value={cert.recipient} />
         <Field label="Номинал" value={currency.format(cert.amount)} />
         <Field label="Остаток" value={currency.format(cert.balance)} />

@@ -13,7 +13,7 @@ export const statusConfig: Record<GiftStatus, { label: string; className: string
   },
   expired: {
     label: "Просрочен",
-    className: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-200",
-    dotClass: "bg-amber-500",
+    className: "bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-200",
+    dotClass: "bg-red-500",
   },
 };
