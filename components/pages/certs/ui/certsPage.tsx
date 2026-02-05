@@ -28,6 +28,8 @@ const currency = new Intl.NumberFormat("ru-RU", {
   maximumFractionDigits: 0,
 });
 
+const FREE_USER_CERT_LIMIT = 5;
+
 export const CertsPage: FC = () => {
   const searchParams = useSearchParams();
 
@@ -42,6 +44,7 @@ export const CertsPage: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isLimitWarningOpen, setIsLimitWarningOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const successTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [scanErrorMessage, setScanErrorMessage] = useState<string | null>(null);
@@ -116,6 +119,11 @@ export const CertsPage: FC = () => {
     successTimeoutRef.current = setTimeout(() => setSuccessMessage(null), 3000);
   }, []);
 
+  const handleOpenCreate = useCallback(() => {
+    if (certificates.length >= FREE_USER_CERT_LIMIT) setIsLimitWarningOpen(true);
+    else setIsCreateOpen(true);
+  }, [certificates.length]);
+
   return (
     <section className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8">
       <CertsBreadcrumb />
@@ -148,10 +156,29 @@ export const CertsPage: FC = () => {
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={isLimitWarningOpen}
+        onOpenChange={setIsLimitWarningOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Достигнут лимит сертификатов</DialogTitle>
+            <DialogDescription>
+              Для бесплатного тарифа разрешено не более {FREE_USER_CERT_LIMIT} сертификатов. Чтобы создавать больше, оформите платную подписку.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" onClick={() => setIsLimitWarningOpen(false)}>
+              Понятно
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <CertsHeader
         cardId={cardIdParams}
         isCreateOpen={isCreateOpen}
-        onOpen={() => setIsCreateOpen(true)}
+        onOpen={handleOpenCreate}
         onClose={() => setIsCreateOpen(false)}
         setIsCreateOpen={setIsCreateOpen}
         onCreated={(created) => setCertificates((prev) => [created, ...prev])}
