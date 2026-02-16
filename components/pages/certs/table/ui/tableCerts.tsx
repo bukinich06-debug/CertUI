@@ -76,10 +76,6 @@ export const TableCerts = ({
           className="cursor-pointer"
         >
           <TableCell>{cert.recipient}</TableCell>
-          <TableCell className="text-right">{currency.format(cert.amount)}</TableCell>
-          <TableCell className="text-right">{currency.format(cert.balance)}</TableCell>
-          <TableCell>{formatCertDate(cert.issuedAt)}</TableCell>
-          <TableCell>{formatCertDate(cert.expiresAt)}</TableCell>
           <TableCell>
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}
@@ -88,6 +84,10 @@ export const TableCerts = ({
               {status.label}
             </span>
           </TableCell>
+          <TableCell className="text-right">{currency.format(cert.amount)}</TableCell>
+          <TableCell className="text-right">{currency.format(cert.balance)}</TableCell>
+          <TableCell>{formatCertDate(cert.expiresAt)}</TableCell>
+          <TableCell>{formatCertDate(cert.issuedAt)}</TableCell>
         </TableRow>
       );
     });
@@ -98,11 +98,11 @@ export const TableCerts = ({
       <TableHeader className="bg-muted/40">
         <TableRow>
           <TableHead>Получатель</TableHead>
+          <TableHead>Статус</TableHead>
           <TableHead className="text-right">Номинал</TableHead>
           <TableHead className="text-right">Остаток</TableHead>
-          <TableHead>Выдан</TableHead>
           <TableHead>Истекает</TableHead>
-          <TableHead>Статус</TableHead>
+          <TableHead>Выдан</TableHead>
         </TableRow>
       </TableHeader>
 
