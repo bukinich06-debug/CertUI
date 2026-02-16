@@ -76,7 +76,7 @@ export const TableCerts = ({
           className="cursor-pointer"
         >
           <TableCell>{cert.recipient}</TableCell>
-          <TableCell>
+          <TableCell className="w-[1%] whitespace-nowrap">
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}
             >
@@ -98,7 +98,7 @@ export const TableCerts = ({
       <TableHeader className="bg-muted/40">
         <TableRow>
           <TableHead>Получатель</TableHead>
-          <TableHead>Статус</TableHead>
+          <TableHead className="w-[1%] whitespace-nowrap">Статус</TableHead>
           <TableHead className="text-right">Номинал</TableHead>
           <TableHead className="text-right">Остаток</TableHead>
           <TableHead>Истекает</TableHead>
