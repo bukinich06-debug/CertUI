@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.findFirstOrThrow>>) => ({
+  code: cert.code,
   recipient: cert.recipient,
   amount: Number(cert.amount),
   balance: Number(cert.balance),

@@ -76,6 +76,7 @@ export const TableCerts = ({
           className="cursor-pointer"
         >
           <TableCell>{cert.recipient}</TableCell>
+
           <TableCell className="w-[1%] whitespace-nowrap">
             <span
               className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}

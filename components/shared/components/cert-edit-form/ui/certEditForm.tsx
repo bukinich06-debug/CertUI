@@ -1,6 +1,6 @@
 "use client";
 
-import { GiftCertificate } from "@/components/pages/certs/types";
+import { CertEvent, GiftCertificate } from "@/components/pages/certs/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,9 +9,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { makeRequest } from "@/lib/makeRequest";
 import { useEffect, useState } from "react";
 import { CertReadForm } from "../../cert-read-form";
 import { ConfirmRepaymant } from "../confirm-repaymant";
+import { ConfirmPartialRepaymant } from "../partial-repaymant";
+import { CertEventsTable } from "../events-table";
 
 interface Iprops {
   cert: GiftCertificate | null;
@@ -31,11 +34,56 @@ export const CertEditForm = ({
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [showPartialConfirm, setShowPartialConfirm] = useState(false);
+  const [events, setEvents] = useState<CertEvent[]>([]);
+  const [isEventsLoading, setIsEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState<string | null>(null);
   const isRedeemed = cert?.status === "used";
 
   useEffect(() => {
-    return () => {};
-  }, []);
+    if (!cert?.code) {
+      setEvents([]);
+      setEventsError(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const fetchEvents = async () => {
+      setIsEventsLoading(true);
+      setEventsError(null);
+
+      try {
+        const res = await makeRequest(`/api/certEvents?code=${encodeURIComponent(cert.code || "")}`);
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          const message = body?.error ?? `Запрос истории не выполнен со статусом ${res.status}`;
+          throw new Error(message);
+        }
+
+        const data = (await res.json()) as CertEvent[];
+        if (!cancelled) {
+          setEvents(Array.isArray(data) ? data : []);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          const message = err instanceof Error ? err.message : "Не удалось загрузить историю операций";
+          setEventsError(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsEventsLoading(false);
+        }
+      }
+    };
+
+    void fetchEvents();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [cert?.code]);
 
   const handleSuccess = async () => {
     await onRedeemSuccess?.();
@@ -71,7 +119,10 @@ export const CertEditForm = ({
                     <Button
                       type="button"
                       variant="secondary"
-                      onClick={() => setError("Логика частичного погашения будет добавлена позже")}
+                      onClick={() => {
+                        setError(null);
+                        setShowPartialConfirm(true);
+                      }}
                       disabled={isSubmitting}
                     >
                       Погасить частично
@@ -92,6 +143,13 @@ export const CertEditForm = ({
               )}
             </div>
 
+            <CertEventsTable
+              events={events}
+              currency={currency}
+              isLoading={isEventsLoading}
+              error={eventsError}
+            />
+
             <div className="flex justify-end">
               <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                 Закрыть
@@ -104,6 +162,18 @@ export const CertEditForm = ({
       <ConfirmRepaymant
         showConfirm={showConfirm}
         setShowConfirm={setShowConfirm}
+        cert={cert}
+        currency={currency}
+        isSubmitting={isSubmitting}
+        setIsSubmitting={setIsSubmitting}
+        setError={setError}
+        onSuccess={handleSuccess}
+        onSuccessMessage={onSuccessMessage}
+      />
+
+      <ConfirmPartialRepaymant
+        showConfirm={showPartialConfirm}
+        setShowConfirm={setShowPartialConfirm}
         cert={cert}
         currency={currency}
         isSubmitting={isSubmitting}

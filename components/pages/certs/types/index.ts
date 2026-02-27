@@ -12,6 +12,23 @@ export type GiftCertificate = {
   qrCodeDataUrl?: string;
 };
 
+export type CertEventType =
+  | "CREATED"
+  | "REDEEMED"
+  | "PARTIAL_REDEEM"
+  | "EXPIRED"
+  | "CANCELED"
+  | "ADJUSTED";
+
+export type CertEvent = {
+  id: number;
+  eventType: CertEventType;
+  amountDelta: number | null;
+  balanceAfter: number | null;
+  note: string | null;
+  createdAt: string;
+};
+
 export type CreateGiftCertificate = {
   cardId: number;
   recipient: string;
