@@ -6,10 +6,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Dispatch, SetStateAction, useMemo } from "react";
+import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { statusConfig } from "../../constants";
-import { GiftCertificate } from "../../types";
+import { GiftCertificate, GiftStatus } from "../../types";
 import { formatCertDate } from "../../utils/date";
+
+type SortColumn = "recipient" | "status" | "amount" | "balance" | "expiresAt" | "issuedAt";
+
+type SortDirection = "asc" | "desc";
+
+type SortConfig = {
+  column: SortColumn;
+  direction: SortDirection;
+};
 
 interface IProps {
   certificatesMock: GiftCertificate[];
@@ -19,6 +28,12 @@ interface IProps {
   error?: string;
 }
 
+const statusOrder: Record<GiftStatus, number> = {
+  active: 0,
+  expired: 1,
+  used: 2,
+};
+
 export const TableCerts = ({
   certificatesMock,
   setSelectedCert,
@@ -26,6 +41,11 @@ export const TableCerts = ({
   isLoading,
   error,
 }: IProps) => {
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    column: "issuedAt",
+    direction: "desc",
+  });
+
   const rows = useMemo(() => {
     if (isLoading) {
       return (
@@ -57,7 +77,50 @@ export const TableCerts = ({
       );
     }
 
-    return certificatesMock.map((cert) => {
+    const sortedCertificates = [...certificatesMock].sort((a, b) => {
+      const aIsUsed = a.status === "used";
+      const bIsUsed = b.status === "used";
+
+      if (aIsUsed !== bIsUsed) {
+        return aIsUsed ? 1 : -1;
+      }
+
+      let compare = 0;
+
+      switch (sortConfig.column) {
+        case "recipient":
+          compare = a.recipient.localeCompare(b.recipient);
+          break;
+        case "status":
+          compare = statusOrder[a.status] - statusOrder[b.status];
+          break;
+        case "amount":
+          compare = a.amount - b.amount;
+          break;
+        case "balance":
+          compare = a.balance - b.balance;
+          break;
+        case "expiresAt": {
+          const aTime = a.expiresAt ? new Date(a.expiresAt).getTime() : Number.POSITIVE_INFINITY;
+          const bTime = b.expiresAt ? new Date(b.expiresAt).getTime() : Number.POSITIVE_INFINITY;
+          compare = aTime - bTime;
+          break;
+        }
+        case "issuedAt":
+        default: {
+          const aTime = new Date(a.issuedAt).getTime();
+          const bTime = new Date(b.issuedAt).getTime();
+          compare = aTime - bTime;
+          break;
+        }
+      }
+
+      if (compare === 0) return 0;
+
+      return sortConfig.direction === "asc" ? compare : -compare;
+    });
+
+    return sortedCertificates.map((cert) => {
       const now = new Date();
       const isOverdue = cert.expiresAt != null && now > new Date(cert.expiresAt);
 
@@ -92,18 +155,96 @@ export const TableCerts = ({
         </TableRow>
       );
     });
-  }, [certificatesMock, currency, error, isLoading, setSelectedCert]);
+  }, [certificatesMock, currency, error, isLoading, setSelectedCert, sortConfig]);
+
+  const handleSort = (column: SortColumn) => {
+    setSortConfig((prev) => {
+      if (prev.column === column) {
+        return {
+          column,
+          direction: prev.direction === "asc" ? "desc" : "asc",
+        };
+      }
+
+      const isDateColumn = column === "issuedAt" || column === "expiresAt";
+
+      return {
+        column,
+        direction: isDateColumn ? "desc" : "asc",
+      };
+    });
+  };
+
+  const getSortIndicator = (column: SortColumn) => {
+    if (sortConfig.column !== column) return null;
+
+    return <span className="ml-1 text-xs">{sortConfig.direction === "asc" ? "↑" : "↓"}</span>;
+  };
 
   return (
     <Table>
       <TableHeader className="bg-muted/40">
         <TableRow>
-          <TableHead>Получатель</TableHead>
-          <TableHead className="w-[1%] whitespace-nowrap">Статус</TableHead>
-          <TableHead className="text-right">Номинал</TableHead>
-          <TableHead className="text-right">Остаток</TableHead>
-          <TableHead>Истекает</TableHead>
-          <TableHead>Выдан</TableHead>
+          <TableHead>
+            <button
+              type="button"
+              onClick={() => handleSort("recipient")}
+              className="flex w-full items-center justify-start gap-1 text-left text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>Получатель</span>
+              {getSortIndicator("recipient")}
+            </button>
+          </TableHead>
+          <TableHead className="w-[1%] whitespace-nowrap">
+            <button
+              type="button"
+              onClick={() => handleSort("status")}
+              className="flex w-full items-center justify-start gap-1 text-left text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>Статус</span>
+              {getSortIndicator("status")}
+            </button>
+          </TableHead>
+          <TableHead className="text-right">
+            <button
+              type="button"
+              onClick={() => handleSort("amount")}
+              className="flex w-full items-center justify-end gap-1 text-right text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>Номинал</span>
+              {getSortIndicator("amount")}
+            </button>
+          </TableHead>
+          <TableHead className="text-right">
+            <button
+              type="button"
+              onClick={() => handleSort("balance")}
+              className="flex w-full items-center justify-end gap-1 text-right text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>Остаток</span>
+              {getSortIndicator("balance")}
+            </button>
+          </TableHead>
+          <TableHead>
+            <button
+              type="button"
+              onClick={() => handleSort("expiresAt")}
+              className="flex w-full items-center justify-start gap-1 text-left text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>Истекает</span>
+              {getSortIndicator("expiresAt")}
+            </button>
+          </TableHead>
+          <TableHead>
+            <button
+              type="button"
+              onClick={() => handleSort("issuedAt")}
+              className="flex w-full items-center justify-start gap-1 text-left text-sm font-medium text-muted-foreground hover:text-foreground"
+            >
+              <span>Выдан</span>
+              {getSortIndicator("issuedAt")}
+            </button>
+          </TableHead>
         </TableRow>
       </TableHeader>
 
