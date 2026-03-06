@@ -1,4 +1,5 @@
 import { AuthPage } from "@/components/pages";
+import { isEmailAuthEnabled } from "@/lib/auth-flags";
 import { getSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 
@@ -7,7 +8,7 @@ const Auth = async () => {
 
   if (sessionUser) redirect("/main");
 
-  return <AuthPage />;
+  return <AuthPage emailAuthEnabled={isEmailAuthEnabled} />;
 };
 
 export default Auth;

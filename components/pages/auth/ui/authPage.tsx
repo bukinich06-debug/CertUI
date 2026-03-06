@@ -1,14 +1,21 @@
 "use client";
 
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LogIn } from "lucide-react";
-import { useEffect, useState } from "react";
+import { LogIn, UserPlus } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { LoginForm } from "../login";
+import { RegisterForm } from "../register";
 
-export const AuthPage = () => {
-  const [googleLoading, setGoogleLoading] = useState(false);
+type AuthPageProps = {
+  emailAuthEnabled: boolean;
+};
+
+export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
   const [mounted, setMounted] = useState(false);
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     setMounted(true);
@@ -26,10 +33,24 @@ export const AuthPage = () => {
     };
   }, []);
 
-  const handleGoogleStart = () => {
-    setGoogleLoading(true);
-    window.location.href = "/api/auth/google";
-  };
+  const statusMessage = useMemo(() => {
+    if (searchParams.get("verified") === "1") {
+      return "Email подтвержден. Теперь можно войти в аккаунт.";
+    }
+
+    const error = searchParams.get("error");
+    if (!error) return null;
+
+    if (error === "INVALID_TOKEN") {
+      return "Ссылка недействительна или уже истекла.";
+    }
+
+    if (error === "oauth_failed") {
+      return "Не удалось завершить вход через внешний провайдер.";
+    }
+
+    return `Ошибка авторизации: ${error}`;
+  }, [searchParams]);
 
   if (!mounted) {
     return null;
@@ -39,27 +60,36 @@ export const AuthPage = () => {
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10">
       <Card className="border-primary/20 shadow-lg shadow-primary/5">
         <CardContent className="space-y-6 pt-6">
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="mb-2">
-              <TabsTrigger value="login" className="flex items-center gap-2">
-                <LogIn className="h-4 w-4" />
-                Вход
-              </TabsTrigger>
-              {/* TODO: временно убрал таб регистрации */}
-              {/* <TabsTrigger value="register" className="flex items-center gap-2">
-                <UserPlus className="h-4 w-4" />
-                Регистрация
-              </TabsTrigger> */}
-            </TabsList>
+          {statusMessage ? (
+            <Alert>
+              <AlertDescription>{statusMessage}</AlertDescription>
+            </Alert>
+          ) : null}
 
-            <TabsContent value="login">
-              <LoginForm googleLoading={googleLoading} handleGoogleStart={handleGoogleStart} />
-            </TabsContent>
+          {!emailAuthEnabled && <LoginForm emailAuthEnabled={false} />}
 
-            {/* <TabsContent value="register">
-              <RegisterForm googleLoading={googleLoading} handleGoogleStart={handleGoogleStart} />
-            </TabsContent> */}
-          </Tabs>
+          {emailAuthEnabled && (
+            <Tabs defaultValue="login" className="w-full">
+              <TabsList className="mb-2">
+                <TabsTrigger value="login" className="flex items-center gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Вход
+                </TabsTrigger>
+                <TabsTrigger value="register" className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Регистрация
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="login">
+                <LoginForm emailAuthEnabled />
+              </TabsContent>
+
+              <TabsContent value="register">
+                <RegisterForm />
+              </TabsContent>
+            </Tabs>
+          )}
         </CardContent>
       </Card>
     </div>
