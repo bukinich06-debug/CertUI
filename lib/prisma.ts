@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 import { Pool } from "pg";
@@ -7,7 +8,7 @@ const globalForPrisma = globalThis as typeof globalThis & {
   pgPool?: Pool;
 };
 
-const pgPool = globalForPrisma.pgPool ?? new Pool({ connectionString: process.env.DATABASE_URL });
+const pgPool = globalForPrisma.pgPool ?? new Pool({ connectionString: env.DATABASE_URL });
 const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter: new PrismaPg(pgPool) });
 
 if (!globalForPrisma.pgPool) globalForPrisma.pgPool = pgPool;

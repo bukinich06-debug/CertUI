@@ -1,3 +1,4 @@
+import { env } from "@/lib/env";
 import { Resend } from "resend";
 
 type AuthEmailType = "verification" | "password-reset";
@@ -10,14 +11,11 @@ type SendAuthEmailParams = {
   idempotencyKey: string;
 };
 
-const resendApiKey = process.env.RESEND_API_KEY;
-const resendFromEmail =
-  process.env.AUTH_FROM_EMAIL ??
-  process.env.RESEND_FROM_EMAIL ??
-  process.env.EMAIL_FROM;
-const resendReplyTo = process.env.AUTH_REPLY_TO_EMAIL ?? process.env.RESEND_REPLY_TO_EMAIL;
+const resendApiKey = env.RESEND_API_KEY;
+const resendFromEmail = env.AUTH_FROM_EMAIL
+const resendReplyTo = env.AUTH_REPLY_TO_EMAIL
 const forceConsoleDelivery =
-  process.env.AUTH_EMAIL_TRANSPORT === "console" || process.env.AUTH_EMAIL_DEV_TO_TERMINAL === "true";
+  env.AUTH_EMAIL_TRANSPORT === "console" && env.AUTH_EMAIL_DEV_TO_TERMINAL;
 
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 

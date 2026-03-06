@@ -1,4 +1,5 @@
 import { expireCertificates } from "@/lib/certs/expireCheck";
+import { env } from "@/lib/env";
 import { NextResponse } from "next/server";
 
 /**
@@ -15,7 +16,7 @@ export async function GET(request: Request) {
     // Vercel автоматически добавляет заголовок 'x-vercel-cron' со значением '1' при вызове из cron
     const vercelCronHeader = request.headers.get("x-vercel-cron");
     const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
+    const cronSecret = env.CRON_SECRET;
 
     // Для Vercel Cron: проверяем специальный заголовок
     // Для внешних cron сервисов: проверяем секретный токен

@@ -1,45 +1,42 @@
 import { prisma } from "@/lib/prisma";
 import { sendAuthEmail } from "@/lib/email/resend";
-import { isEmailAuthEnabled } from "@/lib/auth-flags";
+import { env } from "@/lib/env";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = env.NODE_ENV === "production";
 
 const fallbackBaseUrl = "http://localhost:3000";
+
 const baseURL =
-  process.env.BETTER_AUTH_URL ??
-  process.env.NEXT_PUBLIC_APP_URL ??
-  process.env.NEXT_PUBLIC_SITE_URL ??
+  env.NEXT_PUBLIC_APP_URL ??
   fallbackBaseUrl;
 
-const secret =
-  process.env.BETTER_AUTH_SECRET ??
-  "replace-this-secret-in-production-before-deploying";
+const secret = env.BETTER_AUTH_SECRET ?? "replace-this-secret-in-production-before-deploying";
 
 const trustedOrigins = Array.from(
   new Set(
-    [baseURL, fallbackBaseUrl, process.env.NEXT_PUBLIC_APP_URL, process.env.NEXT_PUBLIC_SITE_URL].filter(
+    [baseURL, fallbackBaseUrl, env.NEXT_PUBLIC_APP_URL].filter(
       (value): value is string => Boolean(value),
     ),
   ),
 );
 
 const socialProviders = {
-  ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+  ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
     ? {
         google: {
-          clientId: process.env.GOOGLE_CLIENT_ID,
-          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          clientId: env.GOOGLE_CLIENT_ID,
+          clientSecret: env.GOOGLE_CLIENT_SECRET,
         },
       }
     : {}),
-  ...(process.env.VK_CLIENT_ID && process.env.VK_CLIENT_SECRET
+  ...(env.VK_CLIENT_ID && env.VK_CLIENT_SECRET
     ? {
         vk: {
-          clientId: process.env.VK_CLIENT_ID,
-          clientSecret: process.env.VK_CLIENT_SECRET,
+          clientId: env.VK_CLIENT_ID,
+          clientSecret: env.VK_CLIENT_SECRET,
         },
       }
     : {}),
@@ -60,7 +57,7 @@ export const auth = betterAuth({
     },
   },
   emailAndPassword: {
-    enabled: isEmailAuthEnabled,
+    enabled: env.NEXT_PUBLIC_EMAIL_AUTH_ENABLED,
     autoSignIn: false,
     requireEmailVerification: true,
     minPasswordLength: 8,
