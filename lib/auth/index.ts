@@ -1,20 +1,22 @@
-import { prisma } from "@/lib/prisma";
 import { sendAuthEmail } from "@/lib/email/resend";
 import { env } from "@/lib/env";
+import { prisma } from "@/lib/prisma";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { betterAuth } from "better-auth";
+import { genericOAuth } from "better-auth/plugins";
 import { nextCookies } from "better-auth/next-js";
+import {
+  assertEnabledProviderConfig,
+  getEmailConfig,
+  getGenericOAuthProviders,
+  getSocialProviders,
+  isAuthMethodEnabled,
+} from "./methods";
 
 const isProduction = env.NODE_ENV === "production";
-
 const fallbackBaseUrl = "http://localhost:3000";
-
-const baseURL =
-  env.NEXT_PUBLIC_APP_URL ??
-  fallbackBaseUrl;
-
+const baseURL = env.NEXT_PUBLIC_APP_URL ?? fallbackBaseUrl;
 const secret = env.BETTER_AUTH_SECRET ?? "replace-this-secret-in-production-before-deploying";
-
 const trustedOrigins = Array.from(
   new Set(
     [baseURL, fallbackBaseUrl, env.NEXT_PUBLIC_APP_URL].filter(
@@ -23,24 +25,22 @@ const trustedOrigins = Array.from(
   ),
 );
 
-const socialProviders = {
-  ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET
-    ? {
-        google: {
-          clientId: env.GOOGLE_CLIENT_ID,
-          clientSecret: env.GOOGLE_CLIENT_SECRET,
-        },
-      }
-    : {}),
-  ...(env.VK_CLIENT_ID && env.VK_CLIENT_SECRET
-    ? {
-        vk: {
-          clientId: env.VK_CLIENT_ID,
-          clientSecret: env.VK_CLIENT_SECRET,
-        },
-      }
-    : {}),
-};
+assertEnabledProviderConfig("google", [env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET]);
+assertEnabledProviderConfig("vk", [env.VK_CLIENT_ID, env.VK_CLIENT_SECRET]);
+assertEnabledProviderConfig("yandex", [env.YANDEX_CLIENT_ID, env.YANDEX_CLIENT_SECRET]);
+assertEnabledProviderConfig("mailru", [env.MAILRU_CLIENT_ID, env.MAILRU_CLIENT_SECRET]);
+
+const socialProviders = getSocialProviders();
+const genericOAuthProviders = getGenericOAuthProviders();
+const authPlugins = [
+  nextCookies(),
+  ...(genericOAuthProviders.length > 0 ? [genericOAuth({ config: genericOAuthProviders })] : []),
+];
+
+const emailConfig = getEmailConfig({
+  sendAuthEmail,
+  isEmailEnabled: isAuthMethodEnabled("email"),
+});
 
 export const auth = betterAuth({
   appName: "Cert UI",
@@ -56,37 +56,7 @@ export const auth = betterAuth({
       generateId: "serial",
     },
   },
-  emailAndPassword: {
-    enabled: env.NEXT_PUBLIC_EMAIL_AUTH_ENABLED,
-    autoSignIn: false,
-    requireEmailVerification: true,
-    minPasswordLength: 8,
-    maxPasswordLength: 128,
-    revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, url, token }) => {
-      await sendAuthEmail({
-        type: "password-reset",
-        to: user.email,
-        url,
-        userName: user.name,
-        idempotencyKey: `password-reset/${user.id}/${token}`,
-      });
-    },
-  },
-  emailVerification: {
-    sendOnSignUp: true,
-    sendOnSignIn: true,
-    autoSignInAfterVerification: true,
-    sendVerificationEmail: async ({ user, url, token }) => {
-      await sendAuthEmail({
-        type: "verification",
-        to: user.email,
-        url,
-        userName: user.name,
-        idempotencyKey: `email-verification/${user.id}/${token}`,
-      });
-    },
-  },
+  ...emailConfig,
   socialProviders,
   user: {
     modelName: "users",
@@ -115,7 +85,10 @@ export const auth = betterAuth({
     },
     accountLinking: {
       enabled: true,
-      trustedProviders: ["google", "vk", "credential"],
+      trustedProviders: [
+        ...env.NEXT_PUBLIC_ENABLED_AUTH_METHODS,
+        ...(isAuthMethodEnabled("email") ? ["credential"] : []),
+      ],
     },
   },
   session: {
@@ -139,7 +112,7 @@ export const auth = betterAuth({
       updatedAt: "updated_at",
     },
   },
-  plugins: [nextCookies()],
+  plugins: authPlugins,
 });
 
 export type AuthSession = typeof auth.$Infer.Session;

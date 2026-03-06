@@ -8,7 +8,7 @@ const Auth = async () => {
 
   if (sessionUser) redirect("/main");
 
-  return <AuthPage emailAuthEnabled={env.NEXT_PUBLIC_EMAIL_AUTH_ENABLED} />;
+  return <AuthPage />;
 };
 
 export default Auth;

@@ -3,18 +3,29 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/client";
 import { Label } from "@radix-ui/react-label";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { GoogleIcon } from "../../google-icon";
+import { AuthMethod, isAuthMethodEnabled } from "@/lib/auth/methods";
+import { MailRuIcon } from "@/components/icons/MailRu";
+import { YandexIcon } from "@/components/icons/Yandex";
+import { VkIcon } from "@/components/icons/Vk";
 
 const getCallbackUrl = (path: string) => `${window.location.origin}${path}`;
 
+const authMethodLabels: Partial<Record<AuthMethod, string>> = {
+  google: "Google",
+  vk: "VK",
+  yandex: "Yandex",
+  mailru: "Mail.ru",
+};
+
 export const RegisterForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [socialProvider, setSocialProvider] = useState<"google" | "vk" | null>(null);
+  const [socialProvider, setSocialProvider] = useState<AuthMethod | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -62,23 +73,33 @@ export const RegisterForm = () => {
     }
   };
 
-  const handleSocialStart = async (provider: "google" | "vk") => {
+  const handleSocialStart = async (provider: AuthMethod) => {
     try {
       setSocialProvider(provider);
       setErrorMessage(null);
 
-      const result = await authClient.signIn.social({
-        provider,
-        callbackURL: getCallbackUrl("/main"),
-        newUserCallbackURL: getCallbackUrl("/main"),
-        errorCallbackURL: getCallbackUrl("/auth?error=oauth_failed"),
-      });
+      const result =
+        provider === "google" || provider === "vk"
+          ? await authClient.signIn.social({
+              provider,
+              callbackURL: getCallbackUrl("/main"),
+              newUserCallbackURL: getCallbackUrl("/main"),
+              errorCallbackURL: getCallbackUrl("/auth?error=oauth_failed"),
+            })
+          : await authClient.signIn.oauth2({
+              providerId: provider,
+              callbackURL: getCallbackUrl("/main"),
+              newUserCallbackURL: getCallbackUrl("/main"),
+              errorCallbackURL: getCallbackUrl("/auth?error=oauth_failed"),
+            });
 
       if (result.error) {
         setErrorMessage(result.error.message ?? "Не удалось начать OAuth-регистрацию.");
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Не удалось начать OAuth-регистрацию.");
+      setErrorMessage(
+        error instanceof Error ? error.message : "Не удалось начать OAuth-регистрацию.",
+      );
     } finally {
       setSocialProvider(null);
     }
@@ -149,32 +170,89 @@ export const RegisterForm = () => {
         </div>
       </div>
       <div className="flex flex-col gap-3">
-        <Button type="submit" className="w-full" variant="default" disabled={isSubmitting || socialProvider !== null}>
+        <Button
+          type="submit"
+          className="w-full"
+          variant="default"
+          disabled={isSubmitting || socialProvider !== null}
+        >
           {isSubmitting ? "Создаем аккаунт..." : "Зарегистрироваться"}
         </Button>
-        <Button
-          type="button"
-          className="w-full gap-2"
-          disabled={isSubmitting || socialProvider !== null}
-          variant="outline"
-          onClick={() => handleSocialStart("google")}
-        >
-          {socialProvider === "google" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-          Зарегистрироваться через Google
-        </Button>
-        <Button
-          type="button"
-          className="w-full gap-2"
-          disabled={isSubmitting || socialProvider !== null}
-          variant="outline"
-          onClick={() => handleSocialStart("vk")}
-        >
-          {socialProvider === "vk" ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>VK</span>}
-          Зарегистрироваться через VK
-        </Button>
+
+        {isAuthMethodEnabled("google") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || socialProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("google")}
+          >
+            {socialProvider === "google" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <GoogleIcon />
+            )}
+            Зарегистрироваться через Google
+          </Button>
+        )}
+
+        {isAuthMethodEnabled("vk") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || socialProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("vk")}
+          >
+            {socialProvider === "vk" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <VkIcon />
+            )}
+            Зарегистрироваться через VK
+          </Button>
+        )}
+
+        {isAuthMethodEnabled("yandex") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || socialProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("yandex")}
+          >
+            {socialProvider === "yandex" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <YandexIcon />
+            )}
+            Зарегистрироваться через {authMethodLabels.yandex}
+          </Button>
+        )}
+
+        {isAuthMethodEnabled("mailru") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || socialProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("mailru")}
+          >
+            {socialProvider === "mailru" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MailRuIcon />
+            )}
+            Зарегистрироваться через {authMethodLabels.mailru}
+          </Button>
+        )}
+
         <p className="text-center text-sm text-muted-foreground">
           Уже входили через Google или VK и хотите добавить вход по паролю? Используйте{" "}
-          <Link href="/auth/forgot-password" className="text-primary underline-offset-4 hover:underline">
+          <Link
+            href="/auth/forgot-password"
+            className="text-primary underline-offset-4 hover:underline"
+          >
             страницу задания пароля
           </Link>
           .

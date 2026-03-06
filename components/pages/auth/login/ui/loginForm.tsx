@@ -3,22 +3,29 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth-client";
+import { authClient } from "@/lib/auth/client";
 import { Label } from "@radix-ui/react-label";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { GoogleIcon } from "../../google-icon";
+import { AuthMethod, isAuthMethodEnabled } from "@/lib/auth/methods";
+import { VkIcon } from "@/components/icons/Vk";
+import { YandexIcon } from "@/components/icons/Yandex";
+import { MailRuIcon } from "@/components/icons/MailRu";
 
 const getCallbackUrl = (path: string) => `${window.location.origin}${path}`;
 
-type LoginFormProps = {
-  emailAuthEnabled?: boolean;
+const authMethodLabels: Partial<Record<AuthMethod, string>> = {
+  google: "Google",
+  vk: "VK",
+  yandex: "Yandex",
+  mailru: "Mail.ru",
 };
 
-export const LoginForm = ({ emailAuthEnabled = true }: LoginFormProps) => {
+export const LoginForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [socialProvider, setSocialProvider] = useState<"google" | "vk" | null>(null);
+  const [selectedProvider, setSelectedProvider] = useState<AuthMethod | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const handleLoginSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -48,16 +55,28 @@ export const LoginForm = ({ emailAuthEnabled = true }: LoginFormProps) => {
     }
   };
 
-  const handleSocialStart = async (provider: "google" | "vk") => {
+  const handleSocialStart = async (provider: AuthMethod) => {
     try {
-      setSocialProvider(provider);
+      setSelectedProvider(provider);
       setErrorMessage(null);
 
-      const result = await authClient.signIn.social({
-        provider,
-        callbackURL: getCallbackUrl("/main"),
-        errorCallbackURL: getCallbackUrl("/auth?error=oauth_failed"),
-      });
+      let resultPromise;
+
+      if (provider === "google" || provider === "vk") {
+        resultPromise = authClient.signIn.social({
+          provider,
+          callbackURL: getCallbackUrl("/main"),
+          errorCallbackURL: getCallbackUrl("/auth?error=oauth_failed"),
+        });
+      } else {
+        resultPromise = authClient.signIn.oauth2({
+          providerId: provider,
+          callbackURL: getCallbackUrl("/main"),
+          errorCallbackURL: getCallbackUrl("/auth?error=oauth_failed"),
+        });
+      }
+
+      const result = await resultPromise;
 
       if (result.error) {
         setErrorMessage(result.error.message ?? "Не удалось начать OAuth-вход.");
@@ -65,7 +84,7 @@ export const LoginForm = ({ emailAuthEnabled = true }: LoginFormProps) => {
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Не удалось начать OAuth-вход.");
     } finally {
-      setSocialProvider(null);
+      setSelectedProvider(null);
     }
   };
 
@@ -77,7 +96,7 @@ export const LoginForm = ({ emailAuthEnabled = true }: LoginFormProps) => {
         </Alert>
       ) : null}
 
-      {emailAuthEnabled ? (
+      {isAuthMethodEnabled("email") && (
         <>
           <div className="space-y-2">
             <Label htmlFor="login-email">Почта</Label>
@@ -102,44 +121,100 @@ export const LoginForm = ({ emailAuthEnabled = true }: LoginFormProps) => {
             />
           </div>
         </>
-      ) : null}
-      <div className="flex flex-col gap-3">
+      )}
 
-        {emailAuthEnabled ? (
-          <Button type="submit" className="w-full" disabled={isSubmitting || socialProvider !== null}>
+      <div className="flex flex-col gap-3">
+        {isAuthMethodEnabled("email") && (
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isSubmitting || selectedProvider !== null}
+          >
             {isSubmitting ? "Вход..." : "Войти"}
           </Button>
-        ) : null}
-        <Button
-          type="button"
-          className="w-full gap-2"
-          disabled={isSubmitting || socialProvider !== null}
-          variant="outline"
-          onClick={() => handleSocialStart("google")}
-        >
-          {socialProvider === "google" ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-          Войти через Google
-        </Button>
-        <Button
-          type="button"
-          className="w-full gap-2"
-          disabled={isSubmitting || socialProvider !== null}
-          variant="outline"
-          onClick={() => handleSocialStart("vk")}
-        >
-          {socialProvider === "vk" ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>VK</span>}
-          Войти через VK
-        </Button>
-        {!emailAuthEnabled ? (
+        )}
+
+        {isAuthMethodEnabled("google") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || selectedProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("google")}
+          >
+            {selectedProvider === "google" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <GoogleIcon />
+            )}
+            Войти через Google
+          </Button>
+        )}
+        {isAuthMethodEnabled("vk") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || selectedProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("vk")}
+          >
+            {selectedProvider === "vk" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <VkIcon />
+            )}
+            Войти через VK
+          </Button>
+        )}
+
+        {isAuthMethodEnabled("yandex") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || selectedProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("yandex")}
+          >
+            {selectedProvider === "yandex" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <YandexIcon />  
+            )}
+            Войти через {authMethodLabels.yandex}
+          </Button>
+        )}
+
+        {isAuthMethodEnabled("mailru") && (
+          <Button
+            type="button"
+            className="w-full gap-2"
+            disabled={isSubmitting || selectedProvider !== null}
+            variant="outline"
+            onClick={() => handleSocialStart("mailru")}
+          >
+            {selectedProvider === "mailru" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MailRuIcon />
+            )}
+            Войти через {authMethodLabels.mailru}
+          </Button>
+        )}
+
+        {!isAuthMethodEnabled("email") && (
           <Button type="button" className="w-full" variant="secondary" disabled>
             Email + Пароль (скоро...)
           </Button>
-        ) : null}
-        {emailAuthEnabled ? (
-          <Link href="/auth/forgot-password" className="text-center text-sm text-primary underline-offset-4 hover:underline">
+        )}
+
+        {isAuthMethodEnabled("email") && (
+          <Link
+            href="/auth/forgot-password"
+            className="text-center text-sm text-primary underline-offset-4 hover:underline"
+          >
             Задать или восстановить пароль
           </Link>
-        ) : null}
+        )}
       </div>
     </form>
   );

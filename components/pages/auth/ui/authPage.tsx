@@ -5,16 +5,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LogIn, UserPlus } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { LoginForm } from "../login";
 import { RegisterForm } from "../register";
+import { isAuthMethodEnabled } from "@/lib/auth/methods";
 
-type AuthPageProps = {
-  emailAuthEnabled: boolean;
-};
 
-export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
+export const AuthPage = () => {
   const searchParams = useSearchParams();
+
 
   const statusMessage = useMemo(() => {
     if (searchParams.get("verified") === "1") {
@@ -45,9 +44,11 @@ export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
             </Alert>
           ) : null}
 
-          {!emailAuthEnabled && <LoginForm emailAuthEnabled={false} />}
+          {!isAuthMethodEnabled("email") && (
+            <LoginForm />
+          )}
 
-          {emailAuthEnabled && (
+          {isAuthMethodEnabled("email") && (
             <Tabs defaultValue="login" className="w-full">
               <TabsList className="mb-2">
                 <TabsTrigger value="login" className="flex items-center gap-2">
@@ -62,7 +63,7 @@ export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
               </TabsList>
 
               <TabsContent value="login">
-                <LoginForm emailAuthEnabled />
+                <LoginForm />
               </TabsContent>
 
               <TabsContent value="register">

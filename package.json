@@ -12,7 +12,8 @@
     "dbpush": "prisma db push",
     "dbpull": "prisma db pull",
     "studio": "prisma studio",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@better-auth/prisma-adapter": "^1.5.4",
