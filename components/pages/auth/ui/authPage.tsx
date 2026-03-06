@@ -14,24 +14,7 @@ type AuthPageProps = {
 };
 
 export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
-  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
-
-  useEffect(() => {
-    setMounted(true);
-    let mounted = true;
-
-    fetch("/api/auth/me", { cache: "no-store" })
-      .then(async (res) => {
-        if (!mounted) return;
-        if (!res.ok) return;
-      })
-      .catch(() => mounted);
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const statusMessage = useMemo(() => {
     if (searchParams.get("verified") === "1") {
@@ -52,10 +35,6 @@ export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
     return `Ошибка авторизации: ${error}`;
   }, [searchParams]);
 
-  if (!mounted) {
-    return null;
-  }
-
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6 px-4 py-10">
       <Card className="border-primary/20 shadow-lg shadow-primary/5">
@@ -75,6 +54,7 @@ export const AuthPage = ({ emailAuthEnabled }: AuthPageProps) => {
                   <LogIn className="h-4 w-4" />
                   Вход
                 </TabsTrigger>
+                
                 <TabsTrigger value="register" className="flex items-center gap-2">
                   <UserPlus className="h-4 w-4" />
                   Регистрация
