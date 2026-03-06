@@ -10,7 +10,8 @@
     "lint": "next lint",
     "generate": "prisma generate",
     "dbpush": "prisma db push",
-    "dbpull": "prisma db pull"
+    "dbpull": "prisma db pull",
+    "studio": "prisma studio"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
@@ -36,6 +37,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
     "@types/qrcode": "1.5.6",
