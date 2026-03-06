@@ -102,6 +102,9 @@ importers:
       postcss:
         specifier: ^8.5.6
         version: 8.5.6
+      skills:
+        specifier: ^1.4.4
+        version: 1.4.4
       tailwindcss:
         specifier: ^3.4.1
         version: 3.4.19
@@ -2410,6 +2413,11 @@ packages:
   signal-exit@4.1.0:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
+
+  skills@1.4.4:
+    resolution: {integrity: sha512-Ihu9Nfp2Ff95254Wq73grr6hcwCQG1G0K7Ty+0/N7xiT6LG01+XY1FCdTBiGPVoIsCpG4WudJj6/LvHUZWxmCQ==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -5107,6 +5115,8 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
+
+  skills@1.4.4: {}
 
   source-map-js@1.2.1: {}
 
