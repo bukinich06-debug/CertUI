@@ -1,5 +1,6 @@
-import { getSessionUser } from "@/lib/auth/session";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.findUniqueOrThrow>>) => ({
@@ -15,8 +16,8 @@ const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.findUniqueOr
 
 export const GET = async (request: Request) => {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
       return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
     }
 
@@ -34,7 +35,7 @@ export const GET = async (request: Request) => {
     }
 
     const card = await prisma.cards.findUnique({ where: { id: cert.card_id } });
-    const currentUserId = BigInt(user.id);
+    const currentUserId = BigInt(session.user.id);
 
     if (!card || card.user_id !== currentUserId) {
       return NextResponse.json(

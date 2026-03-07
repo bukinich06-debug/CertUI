@@ -1,0 +1,19 @@
+# Postgres image only accepts POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB (no DATABASE_URL).
+# Keep DATABASE_URL in app env in sync, e.g.:
+#   postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${DB_PORT}/${POSTGRES_DB}?schema=public
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: certui-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-mydb}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - certui_pgdata:/var/lib/postgresql/data
+
+volumes:
+  certui_pgdata:

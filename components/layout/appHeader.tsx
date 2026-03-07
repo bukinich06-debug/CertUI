@@ -1,27 +1,38 @@
 "use client";
 
+import { authClient } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface IProps {
   hasSession?: boolean;
   userName?: string;
   loginHref?: string;
-  logoutHref?: string;
 }
 
 export const AppHeader = ({
   hasSession = false,
   userName,
   loginHref = "/auth",
-  logoutHref = "/api/auth/logout",
 }: IProps) => {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const isAuthPage = pathname === "/auth";
   const isAuthenticated = isAuthPage ? false : hasSession;
-  const actionLabel = isAuthenticated ? "Выйти" : "Войти";
-  const actionHref = isAuthenticated ? logoutHref : loginHref;
+
+  const handleSignOut = async () => {
+    try {
+      setIsSigningOut(true);
+      await authClient.signOut();
+      router.push("/auth");
+      router.refresh();
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
 
   return (
     <header className="border-b border-border bg-background/70 backdrop-blur">
@@ -51,11 +62,17 @@ export const AppHeader = ({
             <span>{isAuthenticated ? userName ?? "Пользователь" : "Гость"}</span>
           </div>
 
-          <Button variant={isAuthenticated ? "outline" : "default"} asChild>
-            <Link href={actionHref} prefetch={false}>
-              {actionLabel}
-            </Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="outline" onClick={handleSignOut} disabled={isSigningOut}>
+              {isSigningOut ? "Выход..." : "Выйти"}
+            </Button>
+          ) : (
+            <Button variant="default" asChild>
+              <Link href={loginHref} prefetch={false}>
+                Войти
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

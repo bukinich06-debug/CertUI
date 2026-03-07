@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/layout/appHeader";
-import { getSessionUser } from "@/lib/auth/session";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -25,15 +26,15 @@ interface IProps {
 }
 
 const RootLayout = async ({ children }: Readonly<IProps>) => {
-  const sessionUser = await getSessionUser();
+  const session = await auth.api.getSession({ headers: await headers() });
 
   return (
     <html lang="ru">
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <div className="min-h-screen bg-background text-foreground">
           <AppHeader
-            hasSession={Boolean(sessionUser)}
-            userName={sessionUser?.name ?? sessionUser?.email ?? undefined}
+            hasSession={Boolean(session)}
+            userName={session?.user.name ?? session?.user.email ?? undefined}
           />
           <main>{children}</main>
         </div>

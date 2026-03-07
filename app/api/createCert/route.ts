@@ -1,6 +1,7 @@
-import { getSessionUser } from "@/lib/auth/session";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 
@@ -17,8 +18,8 @@ const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.create>>) =>
 
 export const POST = async (req: Request) => {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
       return NextResponse.json({ error: "Требуется авторизация" }, { status: 401 });
     }
 
@@ -38,7 +39,7 @@ export const POST = async (req: Request) => {
       return NextResponse.json({ error: "cardId должно быть числом" }, { status: 400 });
     }
 
-    const currentUserId = BigInt(user.id);
+    const currentUserId = BigInt(session.user.id);
     const card = await prisma.cards.findUnique({ where: { id: cardId } });
     if (!card || card.user_id !== currentUserId) {
       return NextResponse.json(

@@ -1,5 +1,6 @@
-import { getSessionUser } from "@/lib/auth/session";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 const KNOWN_STATUSES = ["active", "used", "expired"] as const;
@@ -58,13 +59,13 @@ const normalizeCard = (
 });
 
 export const GET = async () => {
-  const user = await getSessionUser();
-  if (!user) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const userId = BigInt(user.id);
+    const userId = BigInt(session.user.id);
     let cards: CardEntity[] = await prisma.cards.findMany({
       where: { user_id: userId },
     });
@@ -89,8 +90,8 @@ export const GET = async () => {
 };
 
 export const POST = async (req: Request) => {
-  const user = await getSessionUser();
-  if (!user) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -112,7 +113,7 @@ export const POST = async (req: Request) => {
       return NextResponse.json({ error: "Card id must be a number" }, { status: 400 });
     }
 
-    const userId = BigInt(user.id);
+    const userId = BigInt(session.user.id);
     const existing = await prisma.cards.findUnique({ where: { id } });
     if (!existing || existing.user_id !== userId) {
       return NextResponse.json({ error: "Card not found" }, { status: 404 });

@@ -1,5 +1,6 @@
-import { getSessionUser } from "@/lib/auth/session";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.findFirstOrThrow>>) => ({
@@ -15,8 +16,8 @@ const normalizeCert = (cert: Awaited<ReturnType<typeof prisma.certs.findFirstOrT
 
 export const GET = async (request: Request) => {
   try {
-    const user = await getSessionUser();
-    if (!user) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -35,7 +36,7 @@ export const GET = async (request: Request) => {
     }
 
     const card = await prisma.cards.findUnique({ where: { id: cardId } });
-    const currentUserId = BigInt(user.id);
+    const currentUserId = BigInt(session.user.id);
 
     if (!card || card.user_id !== currentUserId) {
       return NextResponse.json(
