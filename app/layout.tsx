@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/layout/appHeader";
+import { PageTracker } from "@/components/layout/pageTracker";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import type { Metadata } from "next";
@@ -36,6 +37,7 @@ const RootLayout = async ({ children }: Readonly<IProps>) => {
             hasSession={Boolean(session)}
             userName={session?.user.name ?? session?.user.email ?? undefined}
           />
+          <PageTracker />
           <main>{children}</main>
         </div>
       </body>
